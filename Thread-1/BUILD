@@ -22,6 +22,9 @@ cc_binary(
     srcs = [
         "format.cc"
             ],
+    copts = [
+        "-std=c++11",
+    ],
 )
 
 cc_binary(
