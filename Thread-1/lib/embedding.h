@@ -3,6 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
 
 namespace proj1 {
 
@@ -11,13 +16,70 @@ enum EMBEDDING_ERROR {
     NON_POSITIVE_LEN
 };
 
+class RWLock {
+    public:
+        RWLock(){}
+
+        ~RWLock() {}
+        
+        void read_lock() {
+            std::unique_lock<std::mutex> lck(mtx);
+            while ((this->AW + this->WW) > 0) {
+                this->WR ++;
+                this->okread.wait(lck);
+                this->WR --;
+            }
+            this->AR ++;
+            lck.unlock();
+        }
+
+        void read_unlock() { 
+            std::unique_lock<std::mutex> lck(mtx);
+            this->AR --;
+            if(this->AR == 0 && this->WW > 0)
+                this->okwrite.notify_all();
+            lck.unlock();
+        }
+
+        void write_lock() {
+            std::unique_lock<std::mutex> lck(mtx);
+            while ((this->AW + this->AR) > 0) {
+                this->WW ++;
+                this->okwrite.wait(lck);
+                this->WW --;
+            }
+            this->AW ++;
+            lck.unlock();
+        }
+
+        void write_unlock() {
+            std::unique_lock<std::mutex> lck(mtx);
+            this->AW --;
+            if (this->WW > 0)
+                this->okwrite.notify_all();
+            else if (this->WR > 0)
+                this->okread.notify_all();
+            lck.unlock();
+        }
+
+    private:
+        std::mutex mtx;
+        std::condition_variable okread;
+        std::condition_variable okwrite;
+        int AR=0, WW=0, AW=0, WR=0;
+        //volatile std::atomic<int> AR=0, WW=0, AW=0, WR=0; is a possible choice
+};
+
+using RWLocker = RWLock*;
+
 class Embedding{
 public:
-    Embedding() {}
+    Embedding(){}
     Embedding(int);  // Random init an embedding
     Embedding(int, double*);
     Embedding(int, std::string);
     Embedding(Embedding*);
+    ~Embedding() { delete []this->data; }
     double* get_data() { return this->data; }
     int get_length() { return this->length; }
     void update(Embedding*, double);
@@ -36,6 +98,7 @@ public:
 private:
     int length;
     double* data;
+    RWLocker lock;
 };
 
 using EmbeddingMatrix = std::vector<Embedding*>;
@@ -45,6 +108,7 @@ class EmbeddingHolder{
 public:
     EmbeddingHolder(std::string filename);
     EmbeddingHolder(EmbeddingMatrix &data);
+    ~EmbeddingHolder();
     static EmbeddingMatrix read(std::string);
     void write_to_stdout();
     void write(std::string filename);
@@ -58,6 +122,7 @@ public:
     bool operator==(const EmbeddingHolder&);
 private:
     EmbeddingMatrix emb_matx;
+    RWLocker lock;
 };
 
 } // namespace proj1

@@ -4,6 +4,11 @@
 #include <string>   // string
 #include <chrono>   // timer
 #include <iostream> // cout, endl
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
 
 #include "lib/utils.h"
 #include "lib/model.h" 
@@ -24,6 +29,7 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
                 // Call cold start for downstream applications, slow
                 EmbeddingGradient* gradient = cold_start(new_user, item_emb);
                 users->update_embedding(user_idx, gradient, 0.01);
+                delete gradient;
             }
             break;
         }
@@ -41,15 +47,18 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             Embedding* item = items->get_embedding(item_idx);
             EmbeddingGradient* gradient = calc_gradient(user, item, label);
             users->update_embedding(user_idx, gradient, 0.01);
+            delete gradient;
             gradient = calc_gradient(item, user, label);
             items->update_embedding(item_idx, gradient, 0.001);
+            delete gradient;
             break;
         }
         case RECOMMEND: {
             int user_idx = inst.payloads[0];
             Embedding* user = users->get_embedding(user_idx);
             std::vector<Embedding*> item_pool;
-            for (unsigned int i = 1; i < inst.payloads.size(); ++i) {
+            int iter_idx = inst.payloads[1];
+            for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
                 int item_idx = inst.payloads[i];
                 item_pool.push_back(items->get_embedding(item_idx));
             }
@@ -60,6 +69,24 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
     }
 
 }
+
+struct mythread
+{
+   mythread() {}
+
+   mythread(const Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items)
+      : doThingsThread([&]() { proj1::run_one_instruction(inst, users, items); })
+   {}
+
+   ~mythread()
+   {
+      if (doThingsThread.joinable())
+         doThingsThread.join();
+   }
+private:
+   std::thread doThingsThread;
+};
+
 } // namespace proj1
 
 int main(int argc, char *argv[]) {
@@ -69,15 +96,22 @@ int main(int argc, char *argv[]) {
     proj1::Instructions instructions = proj1::read_instructrions("data/q1_instruction.tsv");
     {
     proj1::AutoTimer timer("q1");  // using this to print out timing of the block
+
+
     // Run all the instructions
     for (proj1::Instruction inst: instructions) {
-        proj1::run_one_instruction(inst, users, items);
+        proj1::mythread t(inst, users, items);
     }
     }
 
     // Write the result
     users->write_to_stdout();
     items->write_to_stdout();
+
+    // We only need to delete the embedding holders, as the pointers are all
+    // pointing at the emb_matx of the holders.
+    delete users;
+    delete items;
 
     return 0;
 }
