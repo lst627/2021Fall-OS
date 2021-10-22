@@ -21,9 +21,17 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
     switch(inst.order) {
         case INIT_EMB: {
             // We need to init the embedding
+            users->lock.read_lock();
             int length = users->get_emb_length();
+            users->lock.read_unlock();
+
             Embedding* new_user = new Embedding(length);
+
+            users->lock.write_lock();
             int user_idx = users->append(new_user);
+            users->lock.write_unlock();
+
+            new_user->lock.write_lock();
             for (int item_index: inst.payloads) {
                 Embedding* item_emb = items->get_embedding(item_index);
                 // Call cold start for downstream applications, slow
@@ -31,6 +39,7 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
                 users->update_embedding(user_idx, gradient, 0.01);
                 delete gradient;
             }
+            new_user->lock.write_unlock();
             break;
         }
         case UPDATE_EMB: {
@@ -45,12 +54,19 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             //}
             Embedding* user = users->get_embedding(user_idx);
             Embedding* item = items->get_embedding(item_idx);
+
+            user->lock.write_lock();
             EmbeddingGradient* gradient = calc_gradient(user, item, label);
             users->update_embedding(user_idx, gradient, 0.01);
+            user->lock.write_unlock();
             delete gradient;
+
+            item->lock.write_lock();
             gradient = calc_gradient(item, user, label);
             items->update_embedding(item_idx, gradient, 0.001);
+            item->lock.write_unlock();
             delete gradient;
+
             break;
         }
         case RECOMMEND: {
@@ -70,23 +86,6 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
 
 }
 
-struct mythread
-{
-   mythread() {}
-
-   mythread(const Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items)
-      : doThingsThread([&]() { proj1::run_one_instruction(inst, users, items); })
-   {}
-
-   ~mythread()
-   {
-      if (doThingsThread.joinable())
-         doThingsThread.join();
-   }
-private:
-   std::thread doThingsThread;
-};
-
 } // namespace proj1
 
 int main(int argc, char *argv[]) {
@@ -97,11 +96,15 @@ int main(int argc, char *argv[]) {
     {
     proj1::AutoTimer timer("q1");  // using this to print out timing of the block
 
-
     // Run all the instructions
+    std::vector<std::thread *> threadArr;
     for (proj1::Instruction inst: instructions) {
-        proj1::mythread t(inst, users, items);
+        std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items);
+        threadArr.push_back(t);
     }
+    int len = threadArr.size();
+    for (int j=0;j<len;++j) 
+        threadArr[j]->join();
     }
 
     // Write the result

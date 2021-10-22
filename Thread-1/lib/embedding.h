@@ -8,6 +8,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#include <typeinfo>
 
 namespace proj1 {
 
@@ -18,15 +19,26 @@ enum EMBEDDING_ERROR {
 
 class RWLock {
     public:
-        RWLock(){}
+        std::mutex *mtx;
+        std::condition_variable *okread;
+        std::condition_variable *okwrite;
+        RWLock(){
+            mtx = new std::mutex;
+            okread = new std::condition_variable;
+            okwrite = new std::condition_variable;
+        }
 
-        ~RWLock() {}
+        ~RWLock() {
+            delete mtx;
+            delete okread;
+            delete okwrite;
+        }
         
         void read_lock() {
-            std::unique_lock<std::mutex> lck(mtx);
+            std::unique_lock<std::mutex> lck(*mtx, std::try_to_lock);
             while ((this->AW + this->WW) > 0) {
                 this->WR ++;
-                this->okread.wait(lck);
+                this->okread->wait(lck);
                 this->WR --;
             }
             this->AR ++;
@@ -34,18 +46,18 @@ class RWLock {
         }
 
         void read_unlock() { 
-            std::unique_lock<std::mutex> lck(mtx);
+            std::unique_lock<std::mutex> lck(*mtx, std::try_to_lock);
             this->AR --;
             if(this->AR == 0 && this->WW > 0)
-                this->okwrite.notify_all();
+                this->okwrite->notify_all();
             lck.unlock();
         }
 
         void write_lock() {
-            std::unique_lock<std::mutex> lck(mtx);
+            std::unique_lock<std::mutex> lck(*mtx, std::try_to_lock);
             while ((this->AW + this->AR) > 0) {
                 this->WW ++;
-                this->okwrite.wait(lck);
+                this->okwrite->wait(lck);
                 this->WW --;
             }
             this->AW ++;
@@ -53,27 +65,23 @@ class RWLock {
         }
 
         void write_unlock() {
-            std::unique_lock<std::mutex> lck(mtx);
+            std::unique_lock<std::mutex> lck(*mtx, std::try_to_lock);
             this->AW --;
             if (this->WW > 0)
-                this->okwrite.notify_all();
+                this->okwrite->notify_all();
             else if (this->WR > 0)
-                this->okread.notify_all();
+                this->okread->notify_all();
             lck.unlock();
         }
 
     private:
-        std::mutex mtx;
-        std::condition_variable okread;
-        std::condition_variable okwrite;
         int AR=0, WW=0, AW=0, WR=0;
         //volatile std::atomic<int> AR=0, WW=0, AW=0, WR=0; is a possible choice
 };
 
-using RWLocker = RWLock*;
-
 class Embedding{
 public:
+    RWLock lock = RWLock();
     Embedding(){}
     Embedding(int);  // Random init an embedding
     Embedding(int, double*);
@@ -96,9 +104,8 @@ public:
     Embedding operator/(const double);
     bool operator==(const Embedding&);
 private:
-    int length;
     double* data;
-    RWLocker lock;
+    int length;
 };
 
 using EmbeddingMatrix = std::vector<Embedding*>;
@@ -106,6 +113,7 @@ using EmbeddingGradient = Embedding;
 
 class EmbeddingHolder{
 public:
+    RWLock lock = RWLock();
     EmbeddingHolder(std::string filename);
     EmbeddingHolder(EmbeddingMatrix &data);
     ~EmbeddingHolder();
@@ -122,7 +130,6 @@ public:
     bool operator==(const EmbeddingHolder&);
 private:
     EmbeddingMatrix emb_matx;
-    RWLocker lock;
 };
 
 } // namespace proj1

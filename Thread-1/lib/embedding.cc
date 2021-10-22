@@ -58,21 +58,17 @@ Embedding::Embedding(int length, std::string raw) {
 void Embedding::update(Embedding* gradient, double stepsize) {
     embbedingAssert(gradient->length == this->length,
            "Gradient has different length from the embedding!", LEN_MISMATCH);
-    //this->lock->write_lock();
     for (int i = 0; i < this->length; ++i) {
         this->data[i] -= stepsize * gradient->data[i];
     }
-    //this->lock->write_unlock();
 }
 
 std::string Embedding::to_string() {
     std::string res;
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         if (i > 0) res += ',';
         res += std::to_string(this->data[i]);
     }
-    //this->lock->read_unlock();
     return res;
 }
 
@@ -83,93 +79,74 @@ void Embedding::write_to_stdout() {
 
 Embedding Embedding::operator+(const Embedding &another) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] + another.data[i];
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator+(const double value) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] + value;
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator-(const Embedding &another) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] - another.data[i];
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator-(const double value) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] - value;
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator*(const Embedding &another) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] * another.data[i];
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator*(const double value) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] * value;
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator/(const Embedding &another) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] / another.data[i];
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 Embedding Embedding::operator/(const double value) {
     double* data = new double[this->length];
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         data[i] = this->data[i] / value;
     }
-    //this->lock->read_unlock();
     return Embedding(this->length, data);
 }
 
 bool Embedding::operator==(const Embedding &another) {
-    //this->lock->read_lock();
     for (int i = 0; i < this->length; ++i) {
         if(fabs(this->data[i]-another.data[i])>1.0e-6) {
-            //this->lock->read_unlock();
             return false;
         }
     }
-    //this->lock->read_unlock();
     return true;
 }
 
@@ -205,14 +182,12 @@ EmbeddingMatrix EmbeddingHolder::read(std::string filename) {
 }
 
 int EmbeddingHolder::append(Embedding* data) {
-    //this->lock->write_lock();
     int indx = this->emb_matx.size();
     embbedingAssert(
         data->get_length() == this->emb_matx[0]->get_length(),
         "Embedding to append has a different length!", LEN_MISMATCH
     );
     this->emb_matx.push_back(data);
-    //this->lock->write_unlock();
     return indx;
 }
 
@@ -247,18 +222,14 @@ void EmbeddingHolder::update_embedding(
 }
 
 bool EmbeddingHolder::operator==(const EmbeddingHolder &another) {
-    //this->lock->read_lock();
     if (this->get_n_embeddings() != another.emb_matx.size()) {
-        //this->lock->read_unlock();
         return false;
     }
     for (int i = 0; i < (int)this->emb_matx.size(); ++i) {
         if(!(*(this->emb_matx[i]) == *(another.get_embedding(i)))){
-            //this->lock->read_unlock();
         	return false;
 		}
     }
-    //this->lock->read_unlock();
     return true;
 }
 

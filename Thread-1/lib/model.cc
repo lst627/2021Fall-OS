@@ -23,11 +23,16 @@ EmbeddingGradient* calc_gradient(Embedding* embA, Embedding* embB, int label) {
         2. a sigmoid activation function
         3. a binary cross entropy loss
     */
+    embB->lock.read_lock();
+    if(label == -1) {
+        label = embB->get_data()[0] > 1e-8? 0: 1;
+    }
     double distance = similarity(embA, embB);
     double pred = sigmoid(distance);
     double loss = binary_cross_entropy_backward((double) label, pred);
     loss *= sigmoid_backward(distance);
     EmbeddingGradient *gradA = new Embedding((*embB) * loss);
+    embB->lock.read_unlock();
 
     // Here we simulate a slow calculation
     a_slow_function(10);
@@ -38,8 +43,7 @@ EmbeddingGradient* cold_start(Embedding* user, Embedding* item) {
     // Do some downstream work, e.g. let the user watch this video
     a_slow_function(10);
     // Then we collect a label, e.g. whether the user finished watching the video
-    int label = item->get_data()[0] > 1e-8? 0: 1;
-    return calc_gradient(user, item, label);
+    return calc_gradient(user, item, -1);
 }
 
 Embedding* recommend(Embedding* user, std::vector<Embedding*> items) {
