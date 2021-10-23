@@ -23,11 +23,13 @@ EmbeddingGradient* calc_gradient(Embedding* embA, Embedding* embB, int label) {
         2. a sigmoid activation function
         3. a binary cross entropy loss
     */
+    embA->lock.read_lock();
     embB->lock.read_lock();
     if(label == -1) {
         label = embB->get_data()[0] > 1e-8? 0: 1;
     }
     double distance = similarity(embA, embB);
+    embA->lock.read_unlock();
     double pred = sigmoid(distance);
     double loss = binary_cross_entropy_backward((double) label, pred);
     loss *= sigmoid_backward(distance);

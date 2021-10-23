@@ -31,15 +31,19 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             int user_idx = users->append(new_user);
             users->lock.write_unlock();
 
-            new_user->lock.write_lock();
+            
             for (int item_index: inst.payloads) {
                 Embedding* item_emb = items->get_embedding(item_index);
                 // Call cold start for downstream applications, slow
+                
                 EmbeddingGradient* gradient = cold_start(new_user, item_emb);
+                
+                new_user->lock.write_lock();
                 users->update_embedding(user_idx, gradient, 0.01);
+                new_user->lock.write_unlock();
                 delete gradient;
             }
-            new_user->lock.write_unlock();
+            
             break;
         }
         case UPDATE_EMB: {
@@ -54,15 +58,15 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             //}
             Embedding* user = users->get_embedding(user_idx);
             Embedding* item = items->get_embedding(item_idx);
-
-            user->lock.write_lock();
+            
             EmbeddingGradient* gradient = calc_gradient(user, item, label);
+            user->lock.write_lock();
             users->update_embedding(user_idx, gradient, 0.01);
             user->lock.write_unlock();
             delete gradient;
 
-            item->lock.write_lock();
             gradient = calc_gradient(item, user, label);
+            item->lock.write_lock();
             items->update_embedding(item_idx, gradient, 0.001);
             item->lock.write_unlock();
             delete gradient;
@@ -99,6 +103,7 @@ int main(int argc, char *argv[]) {
     // Run all the instructions
     std::vector<std::thread *> threadArr;
     for (proj1::Instruction inst: instructions) {
+        printf("%d\n", threadArr.size());
         std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items);
         threadArr.push_back(t);
     }
