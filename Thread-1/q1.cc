@@ -30,7 +30,6 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             users->lock.write_lock();
             int user_idx = users->append(new_user);
             users->lock.write_unlock();
-
             
             for (int item_index: inst.payloads) {
                 Embedding* item_emb = items->get_embedding(item_index);
@@ -103,7 +102,7 @@ int main(int argc, char *argv[]) {
     // Run all the instructions
     std::vector<std::thread *> threadArr;
     for (proj1::Instruction inst: instructions) {
-        printf("%d\n", threadArr.size());
+        //printf("%d\n", threadArr.size());
         std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items);
         threadArr.push_back(t);
     }
