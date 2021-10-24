@@ -51,13 +51,17 @@ EmbeddingGradient* cold_start(Embedding* user, Embedding* item) {
 Embedding* recommend(Embedding* user, std::vector<Embedding*> items) {
     Embedding* maxItem;
     double sim, maxSim = -inf;
+    user->lock.read_lock();
     for (auto item: items) {
+        item->lock.read_lock();
         sim = similarity(user, item);
+        item->lock.read_unlock();
         if (sim > maxSim) {
             maxItem = item;
             maxSim = sim;
         }
     }
+    user->lock.read_unlock();
     return maxItem;
 }
 

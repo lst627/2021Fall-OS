@@ -12,6 +12,7 @@
 #include "embedding.h"
 
 namespace proj1 { 
+    RWLock write_to_stdout_lock = RWLock();
 
 Embedding::Embedding(int length) {
     embbedingAssert(length > 0, "Non-positive length encountered!", NON_POSITIVE_LEN);
@@ -73,8 +74,10 @@ std::string Embedding::to_string() {
 }
 
 void Embedding::write_to_stdout() {
+    write_to_stdout_lock.write_lock();
     std::string prefix("[OUTPUT]");
     std::cout << prefix << this->to_string() << '\n';
+    write_to_stdout_lock.write_unlock();
 }
 
 Embedding Embedding::operator+(const Embedding &another) {
