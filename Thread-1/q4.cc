@@ -105,12 +105,17 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
             int user_idx = inst.payloads[0];
             Embedding* user = users->get_embedding(user_idx);
             std::vector<Embedding*> item_pool;
-            int iter_idx = inst.payloads[1];
+            int iter_idx = inst.payloads[1] + 1;
+            epoch_lock->at(iter_idx)->read_lock();
+            //printf("Recommend! epoch = %d\n", iter_idx);
+
             for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
                 int item_idx = inst.payloads[i];
                 item_pool.push_back(items->get_embedding(item_idx));
             }
             Embedding* recommendation = recommend(user, item_pool);
+            epoch_lock->at(iter_idx)->read_unlock();
+
             recommendation->write_to_stdout();
             break;
         }
@@ -122,16 +127,16 @@ void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHold
 
 int main(int argc, char *argv[]) {
 
-    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q3.in");
-    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q3.in");
-    proj1::Instructions instructions = proj1::read_instructrions("data/q3_instruction.tsv");
+    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q4.in");
+    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q4.in");
+    proj1::Instructions instructions = proj1::read_instructrions("data/q4_instruction.tsv");
     {
-    proj1::AutoTimer timer("q3");  // using this to print out timing of the block
+    proj1::AutoTimer timer("q4");  // using this to print out timing of the block
 
     // Preprocesssing
     int max_epoch = -1;
     for (proj1::Instruction inst: instructions) {
-        if (inst.order != proj1::UPDATE_EMB) continue;
+        if (inst.order == proj1::UPDATE_EMB) continue;
         int epoch = -1;
         if (inst.payloads.size() > 3) {
             epoch = inst.payloads[3];
@@ -147,13 +152,19 @@ int main(int argc, char *argv[]) {
         counter.push_back(new int(0));
     }
     for (proj1::Instruction inst: instructions) {
-        if (inst.order != proj1::UPDATE_EMB) continue;
-        int epoch = -1;
-        if (inst.payloads.size() > 3) {
-            epoch = inst.payloads[3];
+        if (inst.order == proj1::INIT_EMB) continue;
+        if (inst.order == proj1::UPDATE_EMB) {
+            int epoch = -1;
+            if (inst.payloads.size() > 3) {
+                epoch = inst.payloads[3];
+            }
+            if(epoch >= 0) 
+                (*counter[epoch]) ++;
         }
-        if(epoch >= 0) 
-            (*counter[epoch]) ++;
+        else {
+            int epoch = inst.payloads[1] + 1;
+            max_epoch = epoch > max_epoch ? epoch : max_epoch;
+        }
     }
     for (int i=0;i<=max_epoch;++i) {
         epoch_lock[i]->write_unlock();
@@ -179,8 +190,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Write the result
-    users->write_to_stdout();
-    items->write_to_stdout();
+    //users->write_to_stdout();
+    //items->write_to_stdout();
 
     // We only need to delete the embedding holders, as the pointers are all
     // pointing at the emb_matx of the holders.
