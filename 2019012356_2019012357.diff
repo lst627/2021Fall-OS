@@ -1,0 +1,1169 @@
+diff --git a/README.md b/README.md
+index 858054e..ffb4e08 100644
+--- a/README.md
++++ b/README.md
+@@ -1,12 +1 @@
+-# Operating System 2021 Fall
+-
+-This public repository holds the projects of this semester. See the `README`
+-in each project for details.
+-
+-## Note
+-
+-1. submit方法调整：每组提交一个diff文件到网络学堂，diff文件命名方式为学号1_学号2.diff，diff的生成方式见文档
+-2. 答疑文档：关于project 1的相关问题请大家更新到[共享文档](https://docs.qq.com/doc/DQkpGelpuTlZJaWRB)，我们会定期解答文档上的问题
+-3. 关于slow_function：在最终版本的提交中请大家打开utils中的slow_function，以保证通过所有的library test。（IMPORTANT：在library test中因为没有打开slow_function导致测试fail将被扣除50%的项目分数）
+-4. 关于item更新：为了简单我们在之前的实现中省略了对item的更新（实际系统中item和user的更新频率和方式都有差异），然而这样隐式地移除了大部分数据间依赖，因此我们要求在更新时同时更新user和item的embedding，最后输出两个EmbeddingHolder，先user后item（注意输出也需要thread-safety）。
+-5. 关于大家在project 1中问的比较多的问题，我们这里统一回复一下：一是前两题的正确性，由于q1 q2指令之间没有执行依赖，因此最后的答案可能有多种，大家只要在保证thread safty的前提下得出任意一种答案即可通过测试；二是关于efficiency，我们会统计所有人的完成时间，排名后30%且慢于我们的参考实现（基础的并行实现，运行时间不公开）的提交我们会酌情扣分；三是关于test case，我们在这个project中不会提供auto test和benchmark，请大家自行设计case来验证代码的正确性
+\ No newline at end of file
++# 2021Fall-OS
+diff --git a/Thread-1/BUILD b/Thread-1/BUILD
+index 28f4114..a0d6627 100644
+--- a/Thread-1/BUILD
++++ b/Thread-1/BUILD
+@@ -29,6 +29,17 @@ cc_binary(
+     srcs = [
+         "q1.cc"
+             ],
++    deps = [
++        "//lib:embedding_lib",
++        "//lib:instruction_lib",
++        "//lib:utils_lib",
++        "//lib:model_lib"
++    ],
++    copts = [
++        "-std=c++11",
++    ],
++    data = glob(["data/q1*"]),
++    linkopts = ["-lpthread"],
+ )
+ 
+ cc_binary(
+@@ -36,6 +47,17 @@ cc_binary(
+     srcs = [
+         "q2.cc"
+             ],
++    deps = [
++        "//lib:embedding_lib",
++        "//lib:instruction_lib",
++        "//lib:utils_lib",
++        "//lib:model_lib"
++    ],
++    copts = [
++        "-std=c++11",
++    ],
++    data = glob(["data/q2*"]),
++    linkopts = ["-lpthread"],
+ )
+ 
+ cc_binary(
+@@ -43,6 +65,35 @@ cc_binary(
+     srcs = [
+         "q3.cc"
+             ],
++    deps = [
++        "//lib:embedding_lib",
++        "//lib:instruction_lib",
++        "//lib:utils_lib",
++        "//lib:model_lib"
++    ],
++    copts = [
++        "-std=c++11",
++    ],
++    data = glob(["data/q3*"]),
++    linkopts = ["-lpthread"],
++)
++
++cc_binary(
++    name = "q4",
++    srcs = [
++        "q4.cc"
++            ],
++    deps = [
++        "//lib:embedding_lib",
++        "//lib:instruction_lib",
++        "//lib:utils_lib",
++        "//lib:model_lib"
++    ],
++    copts = [
++        "-std=c++11",
++    ],
++    data = glob(["data/q4*"]),
++    linkopts = ["-lpthread"],
+ )
+ 
+ cc_test(
+diff --git a/Thread-1/README.md b/Thread-1/README.md
+index a53ec7b..52f2b01 100644
+--- a/Thread-1/README.md
++++ b/Thread-1/README.md
+@@ -158,7 +158,7 @@ C++ threading library (such as `pthread`, or Intel's TBB to do the following tas
+ You should create a `.diff` file of your latest commit from the latest commit of the main project on learn.tsinghua, as follows:
+ 
+ ```bash
+-git diff MAIN_REPO_COMMIT_SHA 1YOUR_COMMIT_SHA1 > ${STUDENT_ID_1}_${STUDENT_ID_2}.diff
++git diff YOUR_COMMIT_SHA1 MAIN_REPO_COMMIT_SHA1 > ${STUDENT_ID_1}_${STUDENT_ID_2}.diff
+ ```
+ 
+ To test whether your `.diff` works, clone a new repo and call `git apply ${STUDENT_ID_1}_${STUDENT_ID_2}.diff` and see if your code still works.
+@@ -255,19 +255,3 @@ In this task, the input `Instruction`  set contains all three types of tasks: "i
+ **Grading:**
+ 
+ You will be graded by the correctness and delay of your recommendation (from the programs' start to recommend result output), as well as being able to read the updated embedding after a relatively short period of time.
+-
+-## Task-5: Inplace recommendation and update
+-
+-The goal of this task is the same as Task-4, except that you need to implement in-place updates and recommendations.
+-That is, you should not copy embeddings and then do the calculation on the copies.
+-Other instructions stay the same as Task-4. If your implementations are already an in-place version in Task-4,
+-you should implement a version that copies the embeddings from the embedding holder (this
+-one should be faster, as it trades space for time).
+-
+-**ToDo:**
+-
+-Similar with Task-4, you should output the recommend result as soon as you get it by calling the provided `Embedding::write_to_stdout()` (we accept all possible order of correct outputs). The delay of recommender response will impact your final score.  There is no need to output the final `EmbeddingHolder` in this tasks.
+-
+-**Grading:**
+-
+-You will be graded by the correctness and delay of your recommendation (from the programs' start to recommend result output), as well as being able to read the updated embedding after a relatively short period of time.
+diff --git a/Thread-1/bazel-Thread-1 b/Thread-1/bazel-Thread-1
+new file mode 100644
+index 0000000..d416f18
+--- /dev/null
++++ b/Thread-1/bazel-Thread-1
+@@ -0,0 +1 @@
++/home/si_jiang/.cache/bazel/_bazel_si_jiang/d84efc8376b570a9af7c6240d2e73dd8/execroot/__main__
+\ No newline at end of file
+diff --git a/Thread-1/bazel-bin b/Thread-1/bazel-bin
+new file mode 100644
+index 0000000..6929148
+--- /dev/null
++++ b/Thread-1/bazel-bin
+@@ -0,0 +1 @@
++/home/si_jiang/.cache/bazel/_bazel_si_jiang/d84efc8376b570a9af7c6240d2e73dd8/execroot/__main__/bazel-out/k8-fastbuild/bin
+\ No newline at end of file
+diff --git a/Thread-1/bazel-out b/Thread-1/bazel-out
+new file mode 100644
+index 0000000..27586db
+--- /dev/null
++++ b/Thread-1/bazel-out
+@@ -0,0 +1 @@
++/home/si_jiang/.cache/bazel/_bazel_si_jiang/d84efc8376b570a9af7c6240d2e73dd8/execroot/__main__/bazel-out
+\ No newline at end of file
+diff --git a/Thread-1/bazel-testlogs b/Thread-1/bazel-testlogs
+new file mode 100644
+index 0000000..4f918de
+--- /dev/null
++++ b/Thread-1/bazel-testlogs
+@@ -0,0 +1 @@
++/home/si_jiang/.cache/bazel/_bazel_si_jiang/d84efc8376b570a9af7c6240d2e73dd8/execroot/__main__/bazel-out/k8-fastbuild/testlogs
+\ No newline at end of file
+diff --git a/Thread-1/format.out b/Thread-1/format.out
+new file mode 100644
+index 0000000..0fa7446
+--- /dev/null
++++ b/Thread-1/format.out
+@@ -0,0 +1,45 @@
++[OUTPUT]-0.916672,0.438292,-0.612921,0.773869,-0.044561,0.880783,-0.820628,0.501351,0.857058,0.390680,0.655897,0.001165,0.300884,-0.159834,-0.069333,-0.652656
++[OUTPUT]0.930991,0.417615,0.404127,0.023190,-0.891307,-0.239698,0.741100,0.099236,-0.804948,-0.496089,-0.929943,-0.585270,0.936668,0.312550,0.007622,-0.921752
++[OUTPUT]-0.596557,0.096502,0.600840,-0.364769,-0.010851,0.764069,0.075744,0.175715,-0.817197,0.965158,-0.341870,0.985347,-0.125509,0.458910,0.438157,0.970536
++[OUTPUT]0.993753,-0.822197,0.055559,-0.751728,-0.547553,0.754476,0.551093,-0.628516,-0.260996,0.017427,-0.919196,-0.367214,0.155304,-0.467805,0.459954,0.130158
++[OUTPUT]-0.879334,-0.640228,0.839249,0.023482,-0.540938,0.802633,-0.606537,0.688808,-0.628394,0.101479,0.482763,-0.133030,-0.880715,-0.654144,-0.773193,0.616439
++[OUTPUT]0.984839,0.233648,-0.035815,-0.879602,0.575782,0.449158,-0.431495,0.141676,0.342281,-0.265620,0.794551,-0.766425,-0.516771,0.675741,-0.568578,-0.359764
++[OUTPUT]-0.013662,-0.328149,0.638905,0.130879,0.633231,-0.389049,-0.330547,-0.507696,-0.157492,0.062884,0.253735,0.800204,0.745938,0.144718,-0.239747,0.719049
++[OUTPUT]-0.658732,0.818837,0.426621,0.590148,0.699796,-0.583585,-0.054610,0.514838,-0.121474,-0.887865,0.173602,-0.948203,-0.670601,0.020399,0.177220,-0.549446
++[OUTPUT]0.994452,-0.366719,0.855882,-0.117890,0.413342,0.679217,-0.393548,-0.638218,-0.019355,0.644089,0.398383,0.324357,0.808661,-0.986542,0.768558,0.364971
++[OUTPUT]0.958113,0.015196,0.389114,-0.409585,0.625166,0.745595,0.977072,-0.516921,-0.607766,0.630836,-0.773653,-0.328741,0.824526,-0.240665,0.656548,-0.723519
++[OUTPUT]0.103926,-0.996023,0.243298,-0.007219,-0.461952,-0.227753,0.517099,-0.768876,0.619788,-0.717524,-0.646730,-0.403424,-0.755709,-0.912842,0.062405,0.920623
++[OUTPUT]0.532214,0.234569,0.184321,-0.704645,0.023340,0.786531,0.567961,-0.282830,-0.368144,-0.901147,0.473634,-0.263915,-0.433691,-0.688961,-0.815372,-0.945467
++[OUTPUT]0.765234,-0.201392,-0.000533,0.774873,0.458159,-0.795103,-0.000813,0.686313,-0.377074,-0.529460,-0.005927,0.242799,0.916452,-0.507848,-0.367214,0.943209
++[OUTPUT]0.722277,-0.005455,-0.291513,-0.775073,0.117238,0.593836,-0.010768,0.707408,-0.511233,-0.781110,0.009952,-0.973220,0.558455,0.110520,-0.569440,-0.599438
++[OUTPUT]0.161624,-0.387043,-0.248548,0.306342,-0.958972,-0.282676,0.322154,-0.149104,0.982688,0.850894,0.635758,-0.576914,0.093768,-0.782197,-0.466389,-0.831633
++[OUTPUT]0.678175,0.339051,0.856835,-0.804427,0.887768,-0.422033,0.301859,0.425874,0.251634,-0.077383,0.273105,0.780718,0.898884,0.644176,0.635907,-0.116260
++[OUTPUT]-0.073554,-0.599148,0.488816,0.894666,-0.371995,-0.840192,-0.591994,0.157122,0.450549,-0.899667,-0.879198,-0.037612,-0.570074,-0.938749,-0.872622,-0.755112
++[OUTPUT]0.735760,0.526643,-0.826290,0.688215,-0.750647,-0.049823,-0.794992,-0.442351,-0.988222,-0.444103,0.551925,0.651644,-0.316369,0.663358,-0.143058,-0.917498
++[OUTPUT]0.689027,0.886214,-0.459371,-0.131004,0.367658,0.261314,-0.126670,-0.410393,0.575357,-0.541183,0.796069,-0.162909,-0.122641,0.872275,-0.579420,-0.597069
++[OUTPUT]-0.021703,0.697649,-0.112268,-0.862253,0.783593,0.186018,0.409477,0.440772,-0.695785,-0.661023,0.386730,-0.150323,0.099550,0.895029,0.708054,-0.309297
++[OUTPUT]0.013368,0.096001,0.208499,0.295918,0.404775,0.508645,0.595751,0.693290,0.800268,0.905767,1.004720,1.100968,1.207048,1.291267,1.406829,1.502868
++[OUTPUT]0.008271,0.099655,0.201903,0.295004,0.403823,0.505680,0.604523,0.697006,0.797464,0.902606,0.996925,1.096178,1.203128,1.299842,1.402478,1.495694
++[OUTPUT]0.009880,0.096357,0.208503,0.298829,0.404107,0.506748,0.596090,0.693659,0.799808,0.906399,1.003958,1.103222,1.208034,1.290198,1.407635,1.503625
++[OUTPUT]0.007112,0.100582,0.201836,0.295874,0.404429,0.504796,0.603869,0.697727,0.797774,0.902569,0.997988,1.096616,1.202939,1.300377,1.401938,1.495577
++[OUTPUT]0.018231,0.096045,0.210443,0.293827,0.407902,0.512431,0.600684,0.690660,0.797206,0.908996,1.000811,1.099358,1.211245,1.290055,1.410132,1.499239
++[OUTPUT]-0.916672,0.438292,-0.612921,0.773869,-0.044561,0.880783,-0.820628,0.501351,0.857058,0.390680,0.655897,0.001165,0.300884,-0.159834,-0.069333,-0.652656
++[OUTPUT]0.921060,0.425797,0.403636,0.030715,-0.885772,-0.247275,0.735561,0.105465,-0.802356,-0.496256,-0.920733,-0.581521,0.935191,0.317238,0.003002,-0.922981
++[OUTPUT]-0.596557,0.096502,0.600840,-0.364769,-0.010851,0.764069,0.075744,0.175715,-0.817197,0.965158,-0.341870,0.985347,-0.125509,0.458910,0.438157,0.970536
++[OUTPUT]0.994819,-0.818499,0.049575,-0.753013,-0.554774,0.758126,0.555138,-0.623342,-0.260226,0.016303,-0.922661,-0.375798,0.148783,-0.468939,0.462359,0.122049
++[OUTPUT]-0.879334,-0.640228,0.839249,0.023482,-0.540938,0.802633,-0.606537,0.688808,-0.628394,0.101479,0.482763,-0.133030,-0.880715,-0.654144,-0.773193,0.616438
++[OUTPUT]0.984839,0.233648,-0.035815,-0.879602,0.575782,0.449158,-0.431495,0.141676,0.342281,-0.265620,0.794551,-0.766425,-0.516771,0.675741,-0.568578,-0.359764
++[OUTPUT]-0.012668,-0.328971,0.638960,0.130128,0.632684,-0.388295,-0.329996,-0.508324,-0.157753,0.062902,0.252816,0.799837,0.746093,0.144250,-0.239287,0.719180
++[OUTPUT]-0.657794,0.818851,0.427002,0.589747,0.700408,-0.582855,-0.053653,0.514332,-0.122070,-0.887247,0.172844,-0.948525,-0.669793,0.020163,0.177864,-0.550155
++[OUTPUT]0.994452,-0.366719,0.855882,-0.117890,0.413342,0.679217,-0.393548,-0.638218,-0.019355,0.644089,0.398383,0.324357,0.808661,-0.986542,0.768558,0.364971
++[OUTPUT]0.964548,0.007197,0.384946,-0.415350,0.618330,0.751295,0.977606,-0.521950,-0.606579,0.639509,-0.775349,-0.319479,0.831076,-0.240864,0.654817,-0.718152
++[OUTPUT]0.103926,-0.996023,0.243298,-0.007219,-0.461952,-0.227753,0.517099,-0.768876,0.619788,-0.717524,-0.646730,-0.403424,-0.755709,-0.912842,0.062405,0.920623
++[OUTPUT]0.532214,0.234569,0.184321,-0.704645,0.023340,0.786531,0.567961,-0.282830,-0.368144,-0.901147,0.473634,-0.263915,-0.433691,-0.688961,-0.815372,-0.945467
++[OUTPUT]0.765234,-0.201392,-0.000533,0.774873,0.458159,-0.795103,-0.000813,0.686313,-0.377074,-0.529460,-0.005927,0.242799,0.916452,-0.507848,-0.367214,0.943209
++[OUTPUT]0.722277,-0.005455,-0.291513,-0.775073,0.117238,0.593836,-0.010768,0.707408,-0.511233,-0.781110,0.009952,-0.973220,0.558455,0.110520,-0.569440,-0.599438
++[OUTPUT]0.161624,-0.387043,-0.248548,0.306342,-0.958972,-0.282676,0.322154,-0.149104,0.982688,0.850894,0.635758,-0.576914,0.093768,-0.782197,-0.466389,-0.831633
++[OUTPUT]0.678175,0.339051,0.856835,-0.804427,0.887768,-0.422033,0.301859,0.425874,0.251634,-0.077383,0.273105,0.780718,0.898884,0.644176,0.635907,-0.116260
++[OUTPUT]-0.073554,-0.599148,0.488816,0.894666,-0.371995,-0.840192,-0.591994,0.157122,0.450549,-0.899667,-0.879198,-0.037612,-0.570074,-0.938749,-0.872622,-0.755112
++[OUTPUT]0.735760,0.526643,-0.826290,0.688215,-0.750647,-0.049823,-0.794992,-0.442351,-0.988222,-0.444103,0.551925,0.651644,-0.316369,0.663358,-0.143058,-0.917498
++[OUTPUT]0.689027,0.886214,-0.459371,-0.131004,0.367658,0.261314,-0.126670,-0.410393,0.575357,-0.541183,0.796069,-0.162909,-0.122641,0.872275,-0.579420,-0.597069
++[OUTPUT]-0.021703,0.697649,-0.112268,-0.862253,0.783593,0.186018,0.409477,0.440772,-0.695785,-0.661023,0.386730,-0.150323,0.099550,0.895029,0.708054,-0.309297
+diff --git a/Thread-1/lib/embedding.cc b/Thread-1/lib/embedding.cc
+index 966a76d..e7edc14 100644
+--- a/Thread-1/lib/embedding.cc
++++ b/Thread-1/lib/embedding.cc
+@@ -2,13 +2,20 @@
+ #include <iostream>
+ #include <sstream>
+ #include <cmath>
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
+ 
+ #include "utils.h"
+ #include "embedding.h"
+ 
+-namespace proj1 {
++namespace proj1 { 
++    RWLock write_to_stdout_lock = RWLock();
+ 
+ Embedding::Embedding(int length) {
++    embbedingAssert(length > 0, "Non-positive length encountered!", NON_POSITIVE_LEN);
+     this->data = new double[length];
+     for (int i = 0; i < length; ++i) {
+         this->data[i] = (double) i / 10.0;
+@@ -67,8 +74,10 @@ std::string Embedding::to_string() {
+ }
+ 
+ void Embedding::write_to_stdout() {
++    write_to_stdout_lock.write_lock();
+     std::string prefix("[OUTPUT]");
+     std::cout << prefix << this->to_string() << '\n';
++    write_to_stdout_lock.write_unlock();
+ }
+ 
+ Embedding Embedding::operator+(const Embedding &another) {
+@@ -137,7 +146,9 @@ Embedding Embedding::operator/(const double value) {
+ 
+ bool Embedding::operator==(const Embedding &another) {
+     for (int i = 0; i < this->length; ++i) {
+-        if(fabs(this->data[i]-another.data[i])>1.0e-6)return false;
++        if(fabs(this->data[i]-another.data[i])>1.0e-6) {
++            return false;
++        }
+     }
+     return true;
+ }
+@@ -214,8 +225,9 @@ void EmbeddingHolder::update_embedding(
+ }
+ 
+ bool EmbeddingHolder::operator==(const EmbeddingHolder &another) {
+-    if (this->get_n_embeddings() != another.emb_matx.size())
++    if (this->get_n_embeddings() != another.emb_matx.size()) {
+         return false;
++    }
+     for (int i = 0; i < (int)this->emb_matx.size(); ++i) {
+         if(!(*(this->emb_matx[i]) == *(another.get_embedding(i)))){
+         	return false;
+diff --git a/Thread-1/lib/embedding.h b/Thread-1/lib/embedding.h
+index 6e13d14..42d7eb6 100644
+--- a/Thread-1/lib/embedding.h
++++ b/Thread-1/lib/embedding.h
+@@ -3,6 +3,12 @@
+ 
+ #include <string>
+ #include <vector>
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
++#include <typeinfo>
+ 
+ namespace proj1 {
+ 
+@@ -11,9 +17,81 @@ enum EMBEDDING_ERROR {
+     NON_POSITIVE_LEN
+ };
+ 
++class RWLock {
++    public:
++        int AR=0, WW=0, AW=0, WR=0;
++        std::mutex *mtx;
++        std::condition_variable *okread;
++        std::condition_variable *okwrite;
++        RWLock(){
++            mtx = new std::mutex;
++            okread = new std::condition_variable;
++            okwrite = new std::condition_variable;
++        }
++
++        ~RWLock() {
++            delete mtx;
++            delete okread;
++            delete okwrite;
++        }
++        
++        void read_lock() {
++            std::unique_lock<std::mutex> lck(*mtx);
++            //printf("Start read lock\n");
++            while ((this->AW + this->WW) > 0) {
++                this->WR ++;
++                this->okread->wait(lck);
++                this->WR --;
++            }
++            this->AR ++;
++            lck.unlock();
++            //printf("Finish read lock\n");
++        }
++
++        void read_unlock() { 
++            std::unique_lock<std::mutex> lck(*mtx);
++            //printf("Start read unlock\n");
++            this->AR --;
++            if(this->AR == 0 && this->WW > 0)
++                this->okwrite->notify_all();
++            lck.unlock();
++            //printf("Finish read unlock\n");
++        }
++
++        void write_lock() {
++            std::unique_lock<std::mutex> lck(*mtx);
++            //printf("Start write lock\n");
++            while ((this->AW + this->AR) > 0) {
++                this->WW ++;
++                this->okwrite->wait(lck);
++                this->WW --;
++            }
++            this->AW ++;
++            lck.unlock();
++            //printf("Finish write lock\n");
++        }
++
++        void write_unlock() {
++            std::unique_lock<std::mutex> lck(*mtx);
++            //printf("Start write unlock\n");
++            this->AW --;
++            if (this->WW > 0)
++                this->okwrite->notify_all();
++            else if (this->WR > 0)
++                this->okread->notify_all();
++            lck.unlock();
++            //printf("Finish write unlock\n");
++        }
++
++    private:
++        
++        //volatile std::atomic<int> AR=0, WW=0, AW=0, WR=0; is a possible choice
++};
++
+ class Embedding{
+ public:
+-    Embedding() {}
++    RWLock lock = RWLock();
++    Embedding(){}
+     Embedding(int);  // Random init an embedding
+     Embedding(int, double*);
+     Embedding(int, std::string);
+@@ -35,8 +113,8 @@ public:
+     Embedding operator/(const double);
+     bool operator==(const Embedding&);
+ private:
+-    int length;
+     double* data;
++    int length;
+ };
+ 
+ using EmbeddingMatrix = std::vector<Embedding*>;
+@@ -44,6 +122,7 @@ using EmbeddingGradient = Embedding;
+ 
+ class EmbeddingHolder{
+ public:
++    RWLock lock = RWLock();
+     EmbeddingHolder(std::string filename);
+     EmbeddingHolder(EmbeddingMatrix &data);
+     ~EmbeddingHolder();
+diff --git a/Thread-1/lib/instruction_test.cc b/Thread-1/lib/instruction_test.cc
+new file mode 100644
+index 0000000..e69de29
+diff --git a/Thread-1/lib/model.cc b/Thread-1/lib/model.cc
+index e857e98..e50d462 100644
+--- a/Thread-1/lib/model.cc
++++ b/Thread-1/lib/model.cc
+@@ -16,17 +16,25 @@ double similarity(Embedding* embA, Embedding* embB) {
+     return similarity;
+ }
+ 
++// NOTE: do not rely on this exact implementation -- it may get modified.
+ EmbeddingGradient* calc_gradient(Embedding* embA, Embedding* embB, int label) {
+     /* For simplicity, here we just simulate the gradient backprop for:
+         1. a dot product between embeddings
+         2. a sigmoid activation function
+         3. a binary cross entropy loss
+     */
++    embA->lock.read_lock();
++    embB->lock.read_lock();
++    if(label == -1) {
++        label = embB->get_data()[0] > 1e-8? 0: 1;
++    }
+     double distance = similarity(embA, embB);
++    embA->lock.read_unlock();
+     double pred = sigmoid(distance);
+     double loss = binary_cross_entropy_backward((double) label, pred);
+     loss *= sigmoid_backward(distance);
+     EmbeddingGradient *gradA = new Embedding((*embB) * loss);
++    embB->lock.read_unlock();
+ 
+     // Here we simulate a slow calculation
+     a_slow_function(10);
+@@ -37,20 +45,23 @@ EmbeddingGradient* cold_start(Embedding* user, Embedding* item) {
+     // Do some downstream work, e.g. let the user watch this video
+     a_slow_function(10);
+     // Then we collect a label, e.g. whether the user finished watching the video
+-    int label = item->get_data()[0] > 1e-8? 0: 1;
+-    return calc_gradient(user, item, label);
++    return calc_gradient(user, item, -1);
+ }
+ 
+ Embedding* recommend(Embedding* user, std::vector<Embedding*> items) {
+     Embedding* maxItem;
+     double sim, maxSim = -inf;
++    user->lock.read_lock();
+     for (auto item: items) {
++        item->lock.read_lock();
+         sim = similarity(user, item);
++        item->lock.read_unlock();
+         if (sim > maxSim) {
+             maxItem = item;
+             maxSim = sim;
+         }
+     }
++    user->lock.read_unlock();
+     return maxItem;
+ }
+ 
+diff --git a/Thread-1/lib/model.h b/Thread-1/lib/model.h
+index a86919b..d3be366 100644
+--- a/Thread-1/lib/model.h
++++ b/Thread-1/lib/model.h
+@@ -6,6 +6,9 @@
+ 
+ namespace proj1 {
+ 
++/* NOTE: DO NOT rely on the implementation here. We may
++         change the implemenation details.
++*/
+ double similarity(Embedding* entityA, Embedding* entityB);
+ 
+ EmbeddingGradient* calc_gradient(Embedding* entityA, Embedding* entityB, int label);
+diff --git a/Thread-1/lib/utils.cc b/Thread-1/lib/utils.cc
+index 3427314..e129ab3 100644
+--- a/Thread-1/lib/utils.cc
++++ b/Thread-1/lib/utils.cc
+@@ -8,7 +8,7 @@
+ namespace proj1 {
+ 
+ void a_slow_function(int seconds) {
+-    //std::this_thread::sleep_for(std::chrono::seconds(seconds));
++    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+ }
+ 
+ double sigmoid(double x) {
+diff --git a/Thread-1/q1.cc b/Thread-1/q1.cc
+index 974ad23..7d1b80d 100644
+--- a/Thread-1/q1.cc
++++ b/Thread-1/q1.cc
+@@ -1,5 +1,124 @@
++#include <vector>
++#include <tuple>
++
++#include <string>   // string
++#include <chrono>   // timer
+ #include <iostream> // cout, endl
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
++
++#include "lib/utils.h"
++#include "lib/model.h" 
++#include "lib/embedding.h" 
++#include "lib/instruction.h"
++
++namespace proj1 {
++
++void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items) {
++    switch(inst.order) {
++        case INIT_EMB: {
++            // We need to init the embedding
++            users->lock.read_lock();
++            int length = users->get_emb_length();
++            users->lock.read_unlock();
++
++            Embedding* new_user = new Embedding(length);
++
++            users->lock.write_lock();
++            int user_idx = users->append(new_user);
++            users->lock.write_unlock();
++            
++            for (int item_index: inst.payloads) {
++                Embedding* item_emb = items->get_embedding(item_index);
++                // Call cold start for downstream applications, slow
++                
++                EmbeddingGradient* gradient = cold_start(new_user, item_emb);
++                
++                new_user->lock.write_lock();
++                users->update_embedding(user_idx, gradient, 0.01);
++                new_user->lock.write_unlock();
++                delete gradient;
++            }
++            
++            break;
++        }
++        case UPDATE_EMB: {
++            int user_idx = inst.payloads[0];
++            int item_idx = inst.payloads[1];
++            int label = inst.payloads[2];
++            // You might need to add this state in other questions.
++            // Here we just show you this as an example
++            // int epoch = -1;
++            //if (inst.payloads.size() > 3) {
++            //    epoch = inst.payloads[3];
++            //}
++            Embedding* user = users->get_embedding(user_idx);
++            Embedding* item = items->get_embedding(item_idx);
++            
++            EmbeddingGradient* gradient = calc_gradient(user, item, label);
++            user->lock.write_lock();
++            users->update_embedding(user_idx, gradient, 0.01);
++            user->lock.write_unlock();
++            delete gradient;
++
++            gradient = calc_gradient(item, user, label);
++            item->lock.write_lock();
++            items->update_embedding(item_idx, gradient, 0.001);
++            item->lock.write_unlock();
++            delete gradient;
++
++            break;
++        }
++        case RECOMMEND: {
++            int user_idx = inst.payloads[0];
++            Embedding* user = users->get_embedding(user_idx);
++            std::vector<Embedding*> item_pool;
++            int iter_idx = inst.payloads[1];
++            for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
++                int item_idx = inst.payloads[i];
++                item_pool.push_back(items->get_embedding(item_idx));
++            }
++            Embedding* recommendation = recommend(user, item_pool);
++            recommendation->write_to_stdout();
++            break;
++        }
++    }
++
++}
++
++} // namespace proj1
++
+ int main(int argc, char *argv[]) {
+-    std::cout << "please implement this function\n";
+-    exit(1);
+-}
+\ No newline at end of file
++
++    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q1.in");
++    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q1.in");
++    proj1::Instructions instructions = proj1::read_instructrions("data/q1_instruction.tsv");
++    {
++    proj1::AutoTimer timer("q1");  // using this to print out timing of the block
++
++    // Run all the instructions
++    std::vector<std::thread *> threadArr;
++    for (proj1::Instruction inst: instructions) {
++        //printf("%d\n", threadArr.size());
++        std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items);
++        threadArr.push_back(t);
++    }
++    int len = threadArr.size();
++    for (int j=0;j<len;++j) 
++        threadArr[j]->join();
++    }
++
++    // Write the result
++    users->write_to_stdout();
++    items->write_to_stdout();
++
++    // We only need to delete the embedding holders, as the pointers are all
++    // pointing at the emb_matx of the holders.
++    delete users;
++    delete items;
++
++    return 0;
++}
+diff --git a/Thread-1/q2.cc b/Thread-1/q2.cc
+index c4b7413..cc3844e 100644
+--- a/Thread-1/q2.cc
++++ b/Thread-1/q2.cc
+@@ -1,4 +1,136 @@
++#include <vector>
++#include <tuple>
++
++#include <string>   // string
++#include <chrono>   // timer
+ #include <iostream> // cout, endl
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
++
++#include "lib/utils.h"
++#include "lib/model.h" 
++#include "lib/embedding.h" 
++#include "lib/instruction.h"
++
++namespace proj1 {
++
++void Coldstart(EmbeddingHolder* users, Embedding* new_user, Embedding* item_emb, int user_idx) {
++    // Call cold start for downstream applications, slow
++
++    EmbeddingGradient* gradient = cold_start(new_user, item_emb);
++
++    new_user->lock.write_lock();
++    users->update_embedding(user_idx, gradient, 0.01);
++    new_user->lock.write_unlock();
++    delete gradient;
++}
++
++void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items) {
++    switch(inst.order) {
++        case INIT_EMB: {
++            // We need to init the embedding
++            users->lock.read_lock();
++            int length = users->get_emb_length();
++            users->lock.read_unlock();
++
++            Embedding* new_user = new Embedding(length);
++
++            users->lock.write_lock();
++            int user_idx = users->append(new_user);
++            users->lock.write_unlock();
++
++            std::vector<std::thread *> multiple_coldstarts;
++            
++            for (int item_index: inst.payloads) {
++                Embedding* item_emb = items->get_embedding(item_index);
++                std::thread *t = new std::thread(Coldstart, users, new_user, item_emb, user_idx);
++                multiple_coldstarts.push_back(t);
++            }
++            int len = multiple_coldstarts.size();
++            for (int j=0;j<len;++j) 
++                multiple_coldstarts[j]->join();
++
++            break;
++        }
++        case UPDATE_EMB: {
++            int user_idx = inst.payloads[0];
++            int item_idx = inst.payloads[1];
++            int label = inst.payloads[2];
++            // You might need to add this state in other questions.
++            // Here we just show you this as an example
++            // int epoch = -1;
++            //if (inst.payloads.size() > 3) {
++            //    epoch = inst.payloads[3];
++            //}
++            Embedding* user = users->get_embedding(user_idx);
++            Embedding* item = items->get_embedding(item_idx);
++
++            
++            EmbeddingGradient* gradient = calc_gradient(user, item, label);
++            user->lock.write_lock();
++            users->update_embedding(user_idx, gradient, 0.01);
++            user->lock.write_unlock();
++            delete gradient;
++
++            
++            gradient = calc_gradient(item, user, label);
++            item->lock.write_lock();
++            items->update_embedding(item_idx, gradient, 0.001);
++            item->lock.write_unlock();
++            delete gradient;
++
++            break;
++        }
++        case RECOMMEND: {
++            int user_idx = inst.payloads[0];
++            Embedding* user = users->get_embedding(user_idx);
++            std::vector<Embedding*> item_pool;
++            int iter_idx = inst.payloads[1];
++            for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
++                int item_idx = inst.payloads[i];
++                item_pool.push_back(items->get_embedding(item_idx));
++            }
++            Embedding* recommendation = recommend(user, item_pool);
++            recommendation->write_to_stdout();
++            break;
++        }
++    }
++
++}
++
++} // namespace proj1
++
+ int main(int argc, char *argv[]) {
+-    exit(1);
+-}
+\ No newline at end of file
++
++    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q2.in");
++    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q2.in");
++    proj1::Instructions instructions = proj1::read_instructrions("data/q2_instruction.tsv");
++    {
++    proj1::AutoTimer timer("q2");  // using this to print out timing of the block
++
++    // Run all the instructions
++    std::vector<std::thread *> threadArr;
++    for (proj1::Instruction inst: instructions) {
++        //printf("%d\n", threadArr.size());
++        std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items);
++        threadArr.push_back(t);
++    }
++    int len = threadArr.size();
++    for (int j=0;j<len;++j) 
++        threadArr[j]->join();
++    }
++
++    // Write the result
++    users->write_to_stdout();
++    items->write_to_stdout();
++
++    // We only need to delete the embedding holders, as the pointers are all
++    // pointing at the emb_matx of the holders.
++    delete users;
++    delete items;
++
++    return 0;
++}
+diff --git a/Thread-1/q3.cc b/Thread-1/q3.cc
+index c4b7413..38c0ef0 100644
+--- a/Thread-1/q3.cc
++++ b/Thread-1/q3.cc
+@@ -1,4 +1,191 @@
++#include <vector>
++#include <tuple>
++
++#include <string>   // string
++#include <chrono>   // timer
+ #include <iostream> // cout, endl
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
++#include <typeinfo>
++
++#include "lib/utils.h"
++#include "lib/model.h" 
++#include "lib/embedding.h" 
++#include "lib/instruction.h"
++
++namespace proj1 {
++
++void Coldstart(EmbeddingHolder* users, Embedding* new_user, Embedding* item_emb, int user_idx) {
++    // Call cold start for downstream applications, slow
++
++    EmbeddingGradient* gradient = cold_start(new_user, item_emb);
++
++    new_user->lock.write_lock();
++    users->update_embedding(user_idx, gradient, 0.01);
++    new_user->lock.write_unlock();
++    delete gradient;
++}
++
++void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items, std::vector<int*>* counter, proj1::RWLock* counter_lock, std::vector<proj1::RWLock*>* epoch_lock, int max_epoch) {
++    switch(inst.order) {
++        case INIT_EMB: {
++            // We need to init the embedding
++            users->lock.read_lock();
++            int length = users->get_emb_length();
++            users->lock.read_unlock();
++
++            Embedding* new_user = new Embedding(length);
++
++            users->lock.write_lock();
++            int user_idx = users->append(new_user);
++            users->lock.write_unlock();
++
++            std::vector<std::thread *> multiple_coldstarts;
++            
++            for (int item_index: inst.payloads) {
++                Embedding* item_emb = items->get_embedding(item_index);
++                std::thread *t = new std::thread(Coldstart, users, new_user, item_emb, user_idx);
++                multiple_coldstarts.push_back(t);
++            }
++            int len = multiple_coldstarts.size();
++            for (int j=0;j<len;++j) 
++                multiple_coldstarts[j]->join();
++
++            break;
++        }
++        case UPDATE_EMB: {
++            int user_idx = inst.payloads[0];
++            int item_idx = inst.payloads[1];
++            int label = inst.payloads[2];
++            // You might need to add this state in other questions.
++            // Here we just show you this as an example
++            int epoch = -1;
++            if (inst.payloads.size() > 3) {
++               epoch = inst.payloads[3];
++            }
++            if (epoch != -1) {
++                epoch_lock->at(epoch)->read_lock();
++                //printf("Started! epoch = %d\n", epoch);
++            }
++
++            Embedding* user = users->get_embedding(user_idx);
++            Embedding* item = items->get_embedding(item_idx);
++            
++            EmbeddingGradient* gradient = calc_gradient(user, item, label);
++            user->lock.write_lock();
++            users->update_embedding(user_idx, gradient, 0.01);
++            user->lock.write_unlock();
++            delete gradient;
++            
++            gradient = calc_gradient(item, user, label);
++            item->lock.write_lock();
++            items->update_embedding(item_idx, gradient, 0.001);
++            item->lock.write_unlock();
++            delete gradient;
++
++            if (epoch != -1) {
++                //printf("Finished! epoch = %d\n", epoch);
++                epoch_lock->at(epoch)->read_unlock();
++                counter_lock->write_lock();
++                (*(counter->at(epoch))) --;
++                if ((*(counter->at(epoch))) == 0) {
++                    for(int i=epoch+1;i<=max_epoch;++i) {
++                        epoch_lock->at(i)->write_unlock();
++                        if ((*(counter->at(i))) != 0) break;
++                    }
++                }
++                counter_lock->write_unlock();
++            }
++            break;
++        }
++        case RECOMMEND: {
++            int user_idx = inst.payloads[0];
++            Embedding* user = users->get_embedding(user_idx);
++            std::vector<Embedding*> item_pool;
++            int iter_idx = inst.payloads[1];
++            for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
++                int item_idx = inst.payloads[i];
++                item_pool.push_back(items->get_embedding(item_idx));
++            }
++            Embedding* recommendation = recommend(user, item_pool);
++            recommendation->write_to_stdout();
++            break;
++        }
++    }
++
++}
++
++} // namespace proj1
++
+ int main(int argc, char *argv[]) {
+-    exit(1);
+-}
+\ No newline at end of file
++
++    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q3.in");
++    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q3.in");
++    proj1::Instructions instructions = proj1::read_instructrions("data/q3_instruction.tsv");
++    {
++    proj1::AutoTimer timer("q3");  // using this to print out timing of the block
++
++    // Preprocesssing
++    int max_epoch = -1;
++    for (proj1::Instruction inst: instructions) {
++        if (inst.order != proj1::UPDATE_EMB) continue;
++        int epoch = -1;
++        if (inst.payloads.size() > 3) {
++            epoch = inst.payloads[3];
++        }
++        max_epoch = epoch > max_epoch ? epoch : max_epoch;
++    }
++    std::vector<int*> counter;
++    std::vector<proj1::RWLock*> epoch_lock;
++    proj1::RWLock *counter_lock = new proj1::RWLock;
++    for (int i=0;i<=max_epoch;++i) {
++        epoch_lock.push_back(new proj1::RWLock);
++        epoch_lock[i]->write_lock();
++        counter.push_back(new int(0));
++    }
++    for (proj1::Instruction inst: instructions) {
++        if (inst.order != proj1::UPDATE_EMB) continue;
++        int epoch = -1;
++        if (inst.payloads.size() > 3) {
++            epoch = inst.payloads[3];
++        }
++        if(epoch >= 0) 
++            (*counter[epoch]) ++;
++    }
++    for (int i=0;i<=max_epoch;++i) {
++        epoch_lock[i]->write_unlock();
++        if ((*counter[i]) != 0) break;
++    }
++    // printf("%d\n", max_epoch);
++
++    // Run all the instructions
++    std::vector<std::thread *> threadArr;
++    for (proj1::Instruction inst: instructions) {
++        //printf("%d\n", threadArr.size());
++        std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items, &counter, counter_lock, &epoch_lock, max_epoch);
++        threadArr.push_back(t);
++    }
++    int len = threadArr.size();
++    for (int j=0;j<len;++j) 
++        threadArr[j]->join();
++    delete counter_lock;
++    for (int i=0;i<=max_epoch;++i) {
++        delete counter[i];
++        delete epoch_lock[i];
++    }
++    }
++
++    // Write the result
++    users->write_to_stdout();
++    items->write_to_stdout();
++
++    // We only need to delete the embedding holders, as the pointers are all
++    // pointing at the emb_matx of the holders.
++    delete users;
++    delete items;
++
++    return 0;
++}
+diff --git a/Thread-1/q4.cc b/Thread-1/q4.cc
+new file mode 100644
+index 0000000..026cebf
+--- /dev/null
++++ b/Thread-1/q4.cc
+@@ -0,0 +1,202 @@
++#include <vector>
++#include <tuple>
++
++#include <string>   // string
++#include <chrono>   // timer
++#include <iostream> // cout, endl
++#include <atomic>
++#include <thread>
++#include <mutex>
++#include <condition_variable>
++#include <future>
++#include <typeinfo>
++
++#include "lib/utils.h"
++#include "lib/model.h" 
++#include "lib/embedding.h" 
++#include "lib/instruction.h"
++
++namespace proj1 {
++
++void Coldstart(EmbeddingHolder* users, Embedding* new_user, Embedding* item_emb, int user_idx) {
++    // Call cold start for downstream applications, slow
++
++    EmbeddingGradient* gradient = cold_start(new_user, item_emb);
++
++    new_user->lock.write_lock();
++    users->update_embedding(user_idx, gradient, 0.01);
++    new_user->lock.write_unlock();
++    delete gradient;
++}
++
++void run_one_instruction(Instruction inst, EmbeddingHolder* users, EmbeddingHolder* items, std::vector<int*>* counter, proj1::RWLock* counter_lock, std::vector<proj1::RWLock*>* epoch_lock, int max_epoch) {
++    switch(inst.order) {
++        case INIT_EMB: {
++            // We need to init the embedding
++            users->lock.read_lock();
++            int length = users->get_emb_length();
++            users->lock.read_unlock();
++
++            Embedding* new_user = new Embedding(length);
++
++            users->lock.write_lock();
++            int user_idx = users->append(new_user);
++            users->lock.write_unlock();
++
++            std::vector<std::thread *> multiple_coldstarts;
++            
++            for (int item_index: inst.payloads) {
++                Embedding* item_emb = items->get_embedding(item_index);
++                std::thread *t = new std::thread(Coldstart, users, new_user, item_emb, user_idx);
++                multiple_coldstarts.push_back(t);
++            }
++            int len = multiple_coldstarts.size();
++            for (int j=0;j<len;++j) 
++                multiple_coldstarts[j]->join();
++
++            break;
++        }
++        case UPDATE_EMB: {
++            int user_idx = inst.payloads[0];
++            int item_idx = inst.payloads[1];
++            int label = inst.payloads[2];
++            // You might need to add this state in other questions.
++            // Here we just show you this as an example
++            int epoch = -1;
++            if (inst.payloads.size() > 3) {
++               epoch = inst.payloads[3];
++            }
++            if (epoch != -1) {
++                epoch_lock->at(epoch)->read_lock();
++                //printf("Started! epoch = %d\n", epoch);
++            }
++
++            Embedding* user = users->get_embedding(user_idx);
++            Embedding* item = items->get_embedding(item_idx);
++            
++            EmbeddingGradient* gradient = calc_gradient(user, item, label);
++            user->lock.write_lock();
++            users->update_embedding(user_idx, gradient, 0.01);
++            user->lock.write_unlock();
++            delete gradient;
++            
++            gradient = calc_gradient(item, user, label);
++            item->lock.write_lock();
++            items->update_embedding(item_idx, gradient, 0.001);
++            item->lock.write_unlock();
++            delete gradient;
++
++            if (epoch != -1) {
++                //printf("Finished! epoch = %d\n", epoch);
++                epoch_lock->at(epoch)->read_unlock();
++                counter_lock->write_lock();
++                (*(counter->at(epoch))) --;
++                if ((*(counter->at(epoch))) == 0) {
++                    for(int i=epoch+1;i<=max_epoch;++i) {
++                        epoch_lock->at(i)->write_unlock();
++                        if ((*(counter->at(i))) != 0) break;
++                    }
++                }
++                counter_lock->write_unlock();
++            }
++            break;
++        }
++        case RECOMMEND: {
++            int user_idx = inst.payloads[0];
++            Embedding* user = users->get_embedding(user_idx);
++            std::vector<Embedding*> item_pool;
++            int iter_idx = inst.payloads[1] + 1;
++            epoch_lock->at(iter_idx)->read_lock();
++            //printf("Recommend! epoch = %d\n", iter_idx);
++
++            for (unsigned int i = 2; i < inst.payloads.size(); ++i) {
++                int item_idx = inst.payloads[i];
++                item_pool.push_back(items->get_embedding(item_idx));
++            }
++            Embedding* recommendation = recommend(user, item_pool);
++            epoch_lock->at(iter_idx)->read_unlock();
++
++            recommendation->write_to_stdout();
++            break;
++        }
++    }
++
++}
++
++} // namespace proj1
++
++int main(int argc, char *argv[]) {
++
++    proj1::EmbeddingHolder* users = new proj1::EmbeddingHolder("data/q4.in");
++    proj1::EmbeddingHolder* items = new proj1::EmbeddingHolder("data/q4.in");
++    proj1::Instructions instructions = proj1::read_instructrions("data/q4_instruction.tsv");
++    {
++    proj1::AutoTimer timer("q4");  // using this to print out timing of the block
++
++    // Preprocesssing
++    int max_epoch = -1;
++    for (proj1::Instruction inst: instructions) {
++        if (inst.order == proj1::UPDATE_EMB) continue;
++        int epoch = -1;
++        if (inst.payloads.size() > 3) {
++            epoch = inst.payloads[3];
++        }
++        max_epoch = epoch > max_epoch ? epoch : max_epoch;
++    }
++    std::vector<int*> counter;
++    std::vector<proj1::RWLock*> epoch_lock;
++    proj1::RWLock *counter_lock = new proj1::RWLock;
++    for (int i=0;i<=max_epoch;++i) {
++        epoch_lock.push_back(new proj1::RWLock);
++        epoch_lock[i]->write_lock();
++        counter.push_back(new int(0));
++    }
++    for (proj1::Instruction inst: instructions) {
++        if (inst.order == proj1::INIT_EMB) continue;
++        if (inst.order == proj1::UPDATE_EMB) {
++            int epoch = -1;
++            if (inst.payloads.size() > 3) {
++                epoch = inst.payloads[3];
++            }
++            if(epoch >= 0) 
++                (*counter[epoch]) ++;
++        }
++        else {
++            int epoch = inst.payloads[1] + 1;
++            max_epoch = epoch > max_epoch ? epoch : max_epoch;
++        }
++    }
++    for (int i=0;i<=max_epoch;++i) {
++        epoch_lock[i]->write_unlock();
++        if ((*counter[i]) != 0) break;
++    }
++    // printf("%d\n", max_epoch);
++
++    // Run all the instructions
++    std::vector<std::thread *> threadArr;
++    for (proj1::Instruction inst: instructions) {
++        //printf("%d\n", threadArr.size());
++        std::thread *t = new std::thread(proj1::run_one_instruction, inst, users, items, &counter, counter_lock, &epoch_lock, max_epoch);
++        threadArr.push_back(t);
++    }
++    int len = threadArr.size();
++    for (int j=0;j<len;++j) 
++        threadArr[j]->join();
++    delete counter_lock;
++    for (int i=0;i<=max_epoch;++i) {
++        delete counter[i];
++        delete epoch_lock[i];
++    }
++    }
++
++    // Write the result
++    //users->write_to_stdout();
++    //items->write_to_stdout();
++
++    // We only need to delete the embedding holders, as the pointers are all
++    // pointing at the emb_matx of the holders.
++    delete users;
++    delete items;
++
++    return 0;
++}
+diff --git a/Thread-1/q5.cc b/Thread-1/q5.cc
+deleted file mode 100644
+index c4b7413..0000000
+--- a/Thread-1/q5.cc
++++ /dev/null
+@@ -1,4 +0,0 @@
+-#include <iostream> // cout, endl
+-int main(int argc, char *argv[]) {
+-    exit(1);
+-}
+\ No newline at end of file
