@@ -18,7 +18,7 @@ class MMATest : public ::testing::Test {
     workload_sz_4 = 2000;
     metrix_length = 10;
     loop_times = 100;
-    thread_num = 10;
+    thread_num = 20;
     //metrix = std::vector<std::vector<int>>(metrix_length, std::vector<int>(metrix_length, 0));
   }
   void TearDown() override {delete mma;}

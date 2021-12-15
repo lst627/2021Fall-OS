@@ -13,6 +13,7 @@ namespace proj3 {
         char *intstr = new char[1 + (int)(log(block_number)/log(10))];
         sprintf(intstr, "%d", block_number);
         std::string blocknum = intstr;
+        // Please change the path of disk
         std::string FileString = "/home/si_jiang/document/2021Fall-OS/my_code/Memory/disk/" + blocknum + ".txt";
         return FileString;
     }
@@ -223,8 +224,20 @@ namespace proj3 {
         lock.write_lock();
         //printf("array_id %d vpi %d offset %d\n", array_id, virtual_page_id, offset);
         auto itr = page_map.find(array_id);
+        // if (itr == page_map.end()) {
+        //     printf("array_id %d vpi %d offset %d\n", array_id, virtual_page_id, offset);
+        //     for (auto x = page_map.begin(); x != page_map.end(); x++)
+        //         printf("%d ", x->first);
+        //     printf("\n");
+        // }
         assert(itr != page_map.end());
         auto it = itr->second.find(virtual_page_id);
+        // if (it == itr->second.end()) {
+        //     printf("array_id %d vpi %d offset %d\n", array_id, virtual_page_id, offset);
+        //     for (auto x = itr->second.begin(); x != itr->second.end(); x++)
+        //         printf("%d ", x->first);
+        //     printf("\n");
+        // }
         assert(it != itr->second.end());
         int physical_page_id = it->second;
         if (physical_page_id < 0) {
@@ -251,13 +264,13 @@ namespace proj3 {
         int tmp = next_block_number;
         next_block_number += number_of_pages;
         int loc = next_array_id - 1;
-        lock.write_unlock();
 
         for(int i = 0; i < number_of_pages; ++i) {
             page_map[loc][i] = -(tmp+i);
             // Clear block !!!!!
             ClearBlock(tmp+i);
         }
+        lock.write_unlock();
         return res;
     }
     void MemoryManager::Release(ArrayList* arr){
@@ -266,7 +279,11 @@ namespace proj3 {
         int number_of_pages = arr->size / PageSize;
         if (arr->size > number_of_pages * PageSize)
             number_of_pages += 1;
+            
+        lock.write_lock();
         page_map.erase(arr->array_id);
+        lock.write_unlock();
+
         delete arr;
     }
 } // namespce: proj3
