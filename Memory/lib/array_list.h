@@ -2,6 +2,7 @@
 #define ARRAY_LIST_H
 
 #include <cstdlib>
+#include <assert.h>
 
 namespace proj3 {
 

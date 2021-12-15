@@ -43,29 +43,39 @@ class MMATest : public ::testing::Test {
 };
 
 TEST_F(MMATest,task1){
+    //printf("Start task1\n");
 	proj3::ArrayList* arr = mma->Allocate(workload_sz_1);
+    //printf("Allocate Done\n");
     for(unsigned long i = 0; i<workload_sz_1; i++){
         arr->Write(i, 1);
     }
+    //printf("Write Done\n");
     for(unsigned long i = 0; i<workload_sz_1; i++){
         EXPECT_EQ(1, arr->Read(i));
     }
+    //printf("Read Done\n");
     mma->Release(arr);
+    //printf("Release Done\n");
 }
 
 TEST_F(MMATest,task2){
+    //printf("Start task2\n");
 	std::vector<proj3::ArrayList*>arr;
+    //printf("Allocate Done\n");
     for(int i = 0; i<loop_times; i++){
         arr.push_back(mma->Allocate(workload_sz_2));
         for(unsigned long j = 0; j < workload_sz_2; j++)arr[i]->Write(j, i);
     }
+    //printf("Write Done\n");
     for(int i = 0; i<loop_times; i++){
         if(i %2)mma->Release(arr[i]);
         else for(unsigned long j = 0; j < workload_sz_2; j++)EXPECT_EQ(i, arr[i]->Read(j));
     }
+    //printf("Read Done\n");
     for(int i = 0; i<loop_times; i++){
         if(i %2 == 0)mma->Release(arr[i]);
     }
+    //printf("Release Done\n");
 }
 
 TEST_F(MMATest,task3){
@@ -99,7 +109,6 @@ TEST_F(MMATest,task3){
         mma->Release(metrixB[i]);
         mma->Release(metrixC[i]);
     }
-
 }
 
 void workload(proj3::MemoryManager * my_mma, size_t workload_sz){
