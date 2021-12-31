@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+option objc_class_prefix = "MMA";
+
+package mma;
+
+// define your service here
+
+// The service definition.
+service Greeter {
+  rpc Allocate (AllocateRequest) returns (AllocateReply) {}
+  rpc Free (FreeRequest) returns (Empty) {}
+  rpc Read (ReadRequest) returns (ReadReply) {}
+  rpc Write (WriteRequest) returns (Empty) {}
+}
+
+// The request message for Allocate()
+message AllocateRequest {
+  int32 sz = 1;     // sz
+}
+
+// The response message for Read()
+message AllocateReply {
+  int32 arr = 1; // result
+}
+
+// The request message for Free()
+message FreeRequest {
+  int32 arr = 1;    // array_id
+}
+
+// The request message for Read()
+message ReadRequest {
+  int32 arr = 1;    // array_id
+  int32 vpid = 2;   // virtual_page_id
+  int32 offset = 3; // offset
+}
+
+// The response message for Read()
+message ReadReply {
+  int32 result = 1; // result
+}
+
+// The request message for Write()
+message WriteRequest {
+  int32 arr = 1;    // array_id
+  int32 vpid = 2;   // virtual_page_id
+  int32 offset = 3; // offset
+  int32 value = 4;  // value
+}
+
+message Empty {}
