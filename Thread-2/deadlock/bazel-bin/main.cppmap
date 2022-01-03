@@ -1,0 +1,15 @@
+module "//:main" {
+  export *
+  use "//lib:resource_manager_lib"
+  use "//lib:utils_lib"
+  use "//lib:workload_lib"
+  use "//lib:thread_manager_lib"
+  use "@bazel_tools//tools/cpp:malloc"
+  use "crosstool"
+}
+extern module "//lib:resource_manager_lib" "../../../bazel-out/darwin_arm64-fastbuild/bin/lib/resource_manager_lib.cppmap"
+extern module "//lib:utils_lib" "../../../bazel-out/darwin_arm64-fastbuild/bin/lib/utils_lib.cppmap"
+extern module "//lib:workload_lib" "../../../bazel-out/darwin_arm64-fastbuild/bin/lib/workload_lib.cppmap"
+extern module "//lib:thread_manager_lib" "../../../bazel-out/darwin_arm64-fastbuild/bin/lib/thread_manager_lib.cppmap"
+extern module "@bazel_tools//tools/cpp:malloc" "../../../bazel-out/darwin_arm64-fastbuild/bin/external/bazel_tools/tools/cpp/malloc.cppmap"
+extern module "crosstool" "../../../external/local_config_cc/module.modulemap"

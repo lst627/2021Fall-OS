@@ -1,0 +1,10 @@
+module "//lib:workload_lib" {
+  export *
+  textual header "../../../../lib/workload.h"
+  use "//lib:resource_manager_lib"
+  use "//lib:utils_lib"
+  use "crosstool"
+}
+extern module "//lib:resource_manager_lib" "../../../../bazel-out/darwin_arm64-fastbuild/bin/lib/resource_manager_lib.cppmap"
+extern module "//lib:utils_lib" "../../../../bazel-out/darwin_arm64-fastbuild/bin/lib/utils_lib.cppmap"
+extern module "crosstool" "../../../../external/local_config_cc/module.modulemap"

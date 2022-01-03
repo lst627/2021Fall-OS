@@ -1,0 +1,5 @@
+-static
+-s
+-o
+bazel-out/darwin_arm64-fastbuild/bin/lib/libworkload_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/_objs/workload_lib/workload.pic.o

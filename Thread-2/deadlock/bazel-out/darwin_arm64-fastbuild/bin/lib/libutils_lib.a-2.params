@@ -1,0 +1,5 @@
+-static
+-s
+-o
+bazel-out/darwin_arm64-fastbuild/bin/lib/libutils_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/_objs/utils_lib/utils.pic.o

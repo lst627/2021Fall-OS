@@ -1,0 +1,12 @@
+-o
+bazel-out/darwin_arm64-fastbuild/bin/main
+bazel-out/darwin_arm64-fastbuild/bin/_objs/main/main.pic.o
+bazel-out/darwin_arm64-fastbuild/bin/lib/libworkload_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/libresource_manager_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/libutils_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/libthread_manager_lib.a
+-pthread
+-Wl,-S
+-undefined
+dynamic_lookup
+-headerpad_max_install_names

@@ -1,0 +1,5 @@
+-static
+-s
+-o
+bazel-out/darwin_arm64-fastbuild/bin/lib/libresource_manager_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/_objs/resource_manager_lib/resource_manager.pic.o

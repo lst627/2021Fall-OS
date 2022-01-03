@@ -1,0 +1,5 @@
+-static
+-s
+-o
+bazel-out/darwin_arm64-fastbuild/bin/lib/libthread_manager_lib.a
+bazel-out/darwin_arm64-fastbuild/bin/lib/_objs/thread_manager_lib/thread_manager.pic.o

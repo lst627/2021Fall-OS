@@ -1,0 +1,8 @@
+module "//lib:resource_manager_lib" {
+  export *
+  textual header "../../../../lib/resource_manager.h"
+  use "//lib:thread_manager_lib"
+  use "crosstool"
+}
+extern module "//lib:thread_manager_lib" "../../../../bazel-out/darwin_arm64-fastbuild/bin/lib/thread_manager_lib.cppmap"
+extern module "crosstool" "../../../../external/local_config_cc/module.modulemap"

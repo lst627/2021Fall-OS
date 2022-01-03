@@ -1,0 +1,6 @@
+module "//lib:thread_manager_lib" {
+  export *
+  textual header "../../../../lib/thread_manager.h"
+  use "crosstool"
+}
+extern module "crosstool" "../../../../external/local_config_cc/module.modulemap"
