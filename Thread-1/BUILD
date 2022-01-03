@@ -96,6 +96,24 @@ cc_binary(
     linkopts = ["-lpthread"],
 )
 
+cc_binary(
+    name = "q5",
+    srcs = [
+        "q5.cc"
+            ],
+    deps = [
+        "//lib:embedding_lib",
+        "//lib:instruction_lib",
+        "//lib:utils_lib",
+        "//lib:model_lib"
+    ],
+    copts = [
+        "-std=c++11",
+    ],
+    data = glob(["data/q4*"]),
+    linkopts = ["-lpthread"],
+)
+
 cc_test(
   name = "benchmark",
   size = "small",
