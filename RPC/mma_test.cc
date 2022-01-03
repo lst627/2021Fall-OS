@@ -73,7 +73,7 @@ class MMATestB : public ::testing::Test {
 };
 
 TEST_F(MMATestA,task1){
-    printf("Start Allocation in mma_test\n");
+    //printf("Start Allocation in mma_test\n");
 	ArrayList* arr = mma->Allocate(workload_sz_1);
     for(unsigned long i = 0; i<workload_sz_1; i++){
         arr->Write(i, 1);

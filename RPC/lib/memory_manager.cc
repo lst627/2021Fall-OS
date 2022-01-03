@@ -254,7 +254,7 @@ namespace proj4 {
     }
     int MemoryManager::Allocate(size_t sz){ // in byte
         // when an application requires for memory, create an ArrayList and record mappings from its virtual memory space to the physical memory space
-        printf("Start Allocation in memory_manager\n");
+        //printf("Start Allocation in memory_manager\n");
         int number_of_pages = sz / PageSize;
         if (sz > number_of_pages * PageSize)
             number_of_pages += 1;

@@ -51,7 +51,7 @@ ArrayList* MmaClient::Allocate(size_t sz) {
   request.set_sz(sz);
   AllocateReply reply;
   ClientContext context;
-  printf("Start Allocation in mma_client\n");
+  //printf("Start Allocation in mma_client\n");
   Status status = stub_->Allocate(&context, request, &reply);
   // Act upon its status.
   if (status.ok()) {

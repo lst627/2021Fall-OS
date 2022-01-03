@@ -39,7 +39,7 @@ MemoryManager* mma;
 
 // Logic and data behind the server's behavior.
 Status GreeterServiceImpl::Allocate(ServerContext * context, const AllocateRequest* request, AllocateReply* reply) {
-  printf("Start Allocation in mma_server\n");
+  //printf("Start Allocation in mma_server\n");
   int arr = mma->Allocate(request->sz());
   reply->set_arr(arr);
   return Status::OK;
