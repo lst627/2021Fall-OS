@@ -14,7 +14,7 @@ namespace proj4 {
         sprintf(intstr, "%d", block_number);
         std::string blocknum = intstr;
         // Please change the path of disk
-        std::string FileString = "/home/si_jiang/document/2021Fall-OS/my_code/Memory/disk/" + blocknum + ".txt";
+        std::string FileString = "/home/owner/Documents/2021Fall-OS/my_code/Memory/disk/" + blocknum + ".txt";
         return FileString;
     }
     void ClearBlock(int blockn) {
@@ -125,14 +125,18 @@ namespace proj4 {
         return false;
     }
 
-    MemoryManager::MemoryManager(size_t sz){
+    MemoryManager::MemoryManager(size_t sz, int max_vir_page_num){
         //mma should build its memory space with given space size
         //you should not allocate larger space than 'sz' (the number of physical pages) 
         mem = new PageFrame[sz];
         mma_sz = sz;
+        max_vir_page_num_limit = max_vir_page_num;
         next_array_id = 0;
         next_block_number = 1;
         pt = 0;
+        in_use_page_number.lock();
+        in_use_page_num =0;
+        in_use_page_number.unlock();
         free_list = new unsigned int[sz];
         page_info = new PageInfo[sz];
         for (unsigned int i = 0; i < sz; ++i) {
@@ -258,7 +262,13 @@ namespace proj4 {
         int number_of_pages = sz / PageSize;
         if (sz > number_of_pages * PageSize)
             number_of_pages += 1;
-
+        in_use_page_number.lock();
+        if (max_vir_page_num_limit != -1 && number_of_pages + in_use_page_num > max_vir_page_num_limit) {
+            in_use_page_number.unlock();
+            return -1;
+        }
+        in_use_page_num += number_of_pages;
+        in_use_page_number.unlock();
         lock.write_lock();
         int res = next_array_id ++;
         int tmp = next_block_number;
@@ -271,11 +281,15 @@ namespace proj4 {
             ClearBlock(tmp+i);
         }
         lock.write_unlock();
+        //printf("%d\t", in_use_page_num,"Finish Allocation in memory_manager\n");
         return res;
     }
     void MemoryManager::Release(int array_id){
         // an application will call release() function when destroying its arrayList
         // release the virtual space of the arrayList and erase the corresponding mappings
+        in_use_page_number.lock();
+        in_use_page_num -= page_map[array_id].size();
+        in_use_page_number.unlock();
         lock.write_lock();
         page_map.erase(array_id);
         lock.write_unlock();

@@ -124,7 +124,7 @@ class ArrayList;
 class MemoryManager {
 public:
     // you should not modify the public interfaces used in tests
-    MemoryManager(size_t);
+    MemoryManager(size_t, int);
     int ReadPage(int array_id, int virtual_page_id, int offset);
     void WritePage(int array_id, int virtual_page_id, int offset, int value);
     int Allocate(size_t);
@@ -141,7 +141,9 @@ private:
     int next_block_number;
     int pt; // pointer that points to the earliest page in memory
     /*add your extra states here freely for implementation*/
-
+    int max_vir_page_num_limit; // record max virtual memory page number
+    std::mutex in_use_page_number; // a mutex to guarantee 'in_use_page_num' to be updated thread-safely
+    int in_use_page_num; // record the existing usage virtual memory page number
     void PageIn(int array_id, int virtual_page_id, int physical_page_id);
     void PageOut(int physical_page_id);
     void PageReplace(int array_id, int virtual_page_id);

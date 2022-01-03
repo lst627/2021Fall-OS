@@ -41,7 +41,12 @@ MemoryManager* mma;
 Status GreeterServiceImpl::Allocate(ServerContext * context, const AllocateRequest* request, AllocateReply* reply) {
   //printf("Start Allocation in mma_server\n");
   int arr = mma->Allocate(request->sz());
+  if (arr == -1) {
+    //printf("exceed!\n");
+    return Status::CANCELLED;
+  }
   reply->set_arr(arr);
+  //printf("Finish Allocation in mma_server\n");
   return Status::OK;
 }
 Status GreeterServiceImpl::Free(ServerContext * context, const FreeRequest* request, Empty* reply) {
@@ -77,7 +82,7 @@ void RunServerUL(size_t phy_page_num) {
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
-  mma = new proj4::MemoryManager(phy_page_num);
+  mma = new proj4::MemoryManager(phy_page_num,-1);
   server->Wait();
 }
 
@@ -100,7 +105,7 @@ void RunServerL(size_t phy_page_num, size_t max_vir_page_num) {
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
-  mma = new proj4::MemoryManager(phy_page_num);
+  mma = new proj4::MemoryManager(phy_page_num, max_vir_page_num);
   server->Wait();
 }
 

@@ -47,21 +47,42 @@ MmaClient::MmaClient(std::shared_ptr<Channel> channel):stub_(Greeter::NewStub(ch
 }
 
 ArrayList* MmaClient::Allocate(size_t sz) {
-  AllocateRequest request;
-  request.set_sz(sz);
-  AllocateReply reply;
-  ClientContext context;
-  //printf("Start Allocation in mma_client\n");
-  Status status = stub_->Allocate(&context, request, &reply);
-  // Act upon its status.
-  if (status.ok()) {
-    auto arr = new ArrayList(sz, this, reply.arr());
-    return arr;
-  } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
-    return NULL;
+  while(true) {
+    AllocateRequest request;
+    request.set_sz(sz);
+    AllocateReply reply;
+    ClientContext context;
+    //printf("Start Allocation in mma_client\n");
+    Status status = stub_->Allocate(&context, request, &reply);
+    // Act upon its status.
+    if (status.ok()) {
+      auto arr = new ArrayList(sz, this, reply.arr());
+      return arr;
+    } else {
+      /*
+      if(status.error_code() == 'CANCELLED') {
+        printf("Retry Allocation\n");
+        continue;
+      }*/
+      sleep(1);
+      //printf("Retry Allocation\n");
+      //continue;
+      std::cout << status.error_code() << ": " << status.error_message()
+                << std::endl;
+      continue;
+      //return NULL;
+    }
   }
+  //Status status = stub_->Allocate(&context, request, &reply);
+  // Act upon its status.
+  //if (status.ok()) {
+  //  auto arr = new ArrayList(sz, this, reply.arr());
+  //  return arr;
+  //} else {
+  // std::cout << status.error_code() << ": " << status.error_message()
+  //            << std::endl;
+  //  return NULL;
+  //}
 }
 
 void MmaClient::Free(ArrayList* arr) {

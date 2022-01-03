@@ -124,7 +124,7 @@ class ArrayList;
 class MemoryManager {
 public:
     // you should not modify the public interfaces used in tests
-    MemoryManager(size_t);
+    MemoryManager(size_t, size_t);
     int ReadPage(int array_id, int virtual_page_id, int offset);
     void WritePage(int array_id, int virtual_page_id, int offset, int value);
     ArrayList* Allocate(size_t);
@@ -136,6 +136,7 @@ private:
     PageFrame* mem; // physical pages, using 'PageFrame* mem' is also acceptable 
     PageInfo* page_info; // physical page info
     unsigned int* free_list;  // use bitmap implementation to identify and search for free pages
+    int max_vir_page_num_limit; // record the max virtual page number
     int next_array_id;
     size_t mma_sz;
     int next_block_number;
